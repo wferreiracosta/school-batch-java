@@ -4,12 +4,14 @@ import br.com.wferreiracosta.models.Student;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.json.JacksonJsonObjectReader;
 import org.springframework.batch.item.json.JsonItemReader;
 import org.springframework.batch.item.json.builder.JsonItemReaderBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -26,20 +28,21 @@ public class StepConfig {
     private final StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Step step() {
+    public Step step(JsonItemReader<Student> reader, JdbcBatchItemWriter<Student> writer) {
         return stepBuilderFactory.get(STEP_NAME)
                 .<Student, Student>chunk(1)
-                .reader(reader())
-                .writer(writer())
+                .reader(reader)
+                .writer(writer)
                 .build();
     }
 
     @Bean
-    public JsonItemReader<Student> reader() {
+    @StepScope
+    public JsonItemReader<Student> reader(@Value("#{jobParameters['inputFileName']}") String inputFilenName) {
         return new JsonItemReaderBuilder<Student>()
                 .name(STEP_NAME.concat("_reader"))
                 .jsonObjectReader(new JacksonJsonObjectReader<>(Student.class))
-                .resource(new ClassPathResource("data.json"))
+                .resource(new ClassPathResource(inputFilenName))
                 .build();
     }
 
