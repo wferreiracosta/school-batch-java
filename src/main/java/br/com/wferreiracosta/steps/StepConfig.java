@@ -1,5 +1,6 @@
 package br.com.wferreiracosta.steps;
 
+import br.com.wferreiracosta.config.PathConfig;
 import br.com.wferreiracosta.models.Student;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Step;
@@ -14,7 +15,7 @@ import org.springframework.batch.item.json.builder.JsonItemReaderBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 
 import javax.sql.DataSource;
 
@@ -38,11 +39,11 @@ public class StepConfig {
 
     @Bean
     @StepScope
-    public JsonItemReader<Student> reader(@Value("#{jobParameters['inputFileName']}") String inputFilenName) {
+    public JsonItemReader<Student> reader(@Value("#{jobParameters['inputFileName']}") String inputFilenName, PathConfig pathConfig) {
         return new JsonItemReaderBuilder<Student>()
                 .name(STEP_NAME.concat("_reader"))
                 .jsonObjectReader(new JacksonJsonObjectReader<>(Student.class))
-                .resource(new ClassPathResource(inputFilenName))
+                .resource(new FileSystemResource(pathConfig.getIn().concat(inputFilenName)))
                 .build();
     }
 
